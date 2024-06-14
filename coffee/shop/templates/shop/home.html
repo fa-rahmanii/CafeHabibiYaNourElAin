@@ -1,0 +1,17 @@
+{% extends 'shop/base.html' %} {% block content %}
+
+<h2 class="mt-4" style="text-align: right;">پرفروش‌ترین محصولات</h2>
+<div class="row" style="text-align: right;">
+    {% for product in products %}
+    <div class="col-md-3">
+        <div class="card mb-4">
+            <img class="card-img-top" src="{% if product.image %}{{ product.image.url }}{% else %}https://via.placeholder.com/150{% endif %}" alt="تصویر محصول">
+            <div class="card-body">
+                <h5 class="card-title">{{ product.name }}</h5>
+                <p class="card-text">{{ product.price }} تومان</p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

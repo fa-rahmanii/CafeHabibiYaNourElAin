@@ -1,0 +1,25 @@
+{% extends 'shop/base.html' %} {% block content %}
+<h2 id="vertical-title">{{ selected_vertical }} محصولات</h2>
+
+<div class="row" id="products-container" style="text-align: right;">
+    {% for product in products %}
+    <div class="col-md-3 product {{ product.category.name|slugify }}" id="product-{{ product.id }}">
+        <div class="card mb-4">
+            <img class="card-img-top" src="{% if product.image %}{{ product.image.url }}{% else %}https://via.placeholder.com/150{% endif %}" alt="تصویر محصول">
+            <div class="card-body">
+                <h5 class="card-title">{{ product.name }}</h5>
+                <p class="card-text">{{ product.price }} تومان</p>
+                <form method="post" action="{% url 'add_to_cart' product.id %}">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="quantity_{{ product.id }}">تعداد</label>
+                        <input type="number" id="quantity_{{ product.id }}" name="quantity" class="form-control" value="1" min="1">
+                    </div>
+                    <button type="submit" class="btn btn-primary">افزودن به سبد خرید</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
