@@ -53,9 +53,8 @@ class OrderProduct(models.Model):
         return f"{self.order} - {self.product}"
 
 class SliderItem(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     image = models.ImageField(upload_to='slider_images/')
-    order = models.PositiveIntegerField(default=0)
 
     def __str__(self):
-        return f"SliderItem {self.id} for {self.product.name}"
+        return f"Image {self.id}"
+    
