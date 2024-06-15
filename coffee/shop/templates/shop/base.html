@@ -32,14 +32,15 @@
                     <a class="nav-link" href="{% url 'purchase_history' %}"><i class="fas fa-history"></i> تاریخچه خرید</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'cart' %}"><i class="fas fa-shopping-cart"></i> سبد خرید</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> خروج</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> ورود</a>
-                </li>
+                    <a class="nav-link" href="{% url 'cart' %}"><i class="fas fa-shopping-cart"></i> سبد خرید</a> {% if user.is_authenticated %} {% if user.is_staff %} {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> خروج</a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> ورود</a>
+                    </li>
+                    {% endif %}
             </ul>
         </div>
     </nav>
@@ -48,6 +49,55 @@
         {% block content %}{% endblock %}
     </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropdown = document.getElementById('navbarDropdown');
+            const dropdownMenu = document.getElementById('category-dropdown-menu');
+            const productsContainer = document.getElementById('products-container');
+            const title = document.getElementById('vertical-title');
+
+            dropdown.addEventListener('click', function(event) {
+                if (dropdownMenu.childElementCount === 0) {
+                    fetch('{% url "get_categories" %}')
+                        .then(response => response.json())
+                        .then(data => {
+                            data.forEach(category => {
+                                const categoryLink = document.createElement('a');
+                                categoryLink.classList.add('dropdown-item');
+                                categoryLink.href = '#';
+                                categoryLink.textContent = category.name;
+                                categoryLink.dataset.vertical = category.name;
+                                dropdownMenu.appendChild(categoryLink);
+
+                                categoryLink.addEventListener('click', function(event) {
+                                    event.preventDefault();
+                                    const vertical = this.dataset.vertical;
+
+                                    if (title) {
+                                        title.innerText = `${vertical} محصولات`;
+                                    }
+
+                                    if (productsContainer) {
+                                        fetch(`{% url 'products' %}?vertical=${vertical}`)
+                                            .then(response => response.text())
+                                            .then(html => {
+                                                const parser = new DOMParser();
+                                                const doc = parser.parseFromString(html, 'text/html');
+                                                const newProductsContainer = doc.getElementById('products-container');
+                                                productsContainer.innerHTML = newProductsContainer.innerHTML;
+                                            })
+                                            .catch(error => console.error('Error fetching products:', error));
+                                    } else {
+                                        window.location.href = `{% url 'products' %}?vertical=${vertical}`;
+                                    }
+                                });
+                            });
+                        })
+                        .catch(error => console.error('Error fetching categories:', error));
+                }
+            });
+        });
+    </script>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>

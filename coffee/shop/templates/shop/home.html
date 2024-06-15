@@ -1,4 +1,26 @@
 {% extends 'shop/base.html' %} {% block content %}
+<div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel" style="text-align: right;">
+    <ol class="carousel-indicators">
+        {% for item in slider_items %}
+        <li data-target="#carouselExampleIndicators" data-slide-to="{{ forloop.counter0 }}" class="{% if forloop.first %}active{% endif %}"></li>
+        {% endfor %}
+    </ol>
+    <div class="carousel-inner">
+        {% for item in slider_items %}
+        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+            <img class="d-block w-100" src="{{ item.image.url }}" alt="image">
+        </div>
+        {% endfor %}
+    </div>
+    <a class="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="sr-only">قبلی</span>
+    </a>
+    <a class="carousel-control-next" href="#carouselExampleIndicators" role="button" data-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="sr-only">بعدی</span>
+    </a>
+</div>
 
 <h2 class="mt-4" style="text-align: right;">پرفروش‌ترین محصولات</h2>
 <div class="row" style="text-align: right;">
