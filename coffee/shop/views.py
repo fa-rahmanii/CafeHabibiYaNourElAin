@@ -1,15 +1,18 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
-from .models import Product, Order, OrderProduct, Category, SliderItem
+from .models import Product, Order, OrderProduct, Category, SliderItem, PurchaseRecord
 from django.contrib.auth.decorators import login_required
 from django.core.handlers.wsgi import WSGIRequest
 from django.db.models import Sum
 from django.contrib import messages
+from django.http import JsonResponse
+import json
+
 
 def home(request:WSGIRequest):
     top_products = Product.objects.annotate(total_sold=Sum('orderproduct__quantity')).order_by('-total_sold')[:12]
-    slider_items = SliderItem.objects.all().order_by('order')
+    slider_items = SliderItem.objects.all()
     return render(request, 'shop/home.html', {'products': top_products, 'slider_items': slider_items})
 
 def login_view(request:WSGIRequest):
@@ -47,8 +50,8 @@ def logout_view(request:WSGIRequest):
     return redirect('home')
 
 def product_page(request):
-    vertical = request.GET.get('vertical', 'All')
-    if vertical == 'All':
+    vertical = request.GET.get('vertical', 'همه')
+    if vertical == 'همه':
         products = Product.objects.all()
     else:
         products = Product.objects.filter(category__name=vertical)
@@ -94,10 +97,10 @@ def add_to_cart(request, product_id):
             product_ingredient.storage.amount -= product_ingredient.amount * quantity
             product_ingredient.storage.save()
 
-        messages.success(request, 'Form submission successful')
+        messages.success(request, 'با موفقیت اضافه شد.')
     else:
         available_quantity = product.max_purchase_quantity()
-        messages.warning(request, f'Not enough ingredients. You can only add {available_quantity} units.')
+        messages.warning(request, f'محصولات اولیه به اندازه کافی موجود نیست. فقط میتوانید {available_quantity} واحد اضافه کنید.')
     return redirect('cart')
 
 @login_required
@@ -127,3 +130,45 @@ def purchase_history(request):
         order_details.append(order)
     
     return render(request, 'shop/purchase_history.html', {'orders': order_details})
+
+
+def get_categories(request):
+    categories = Category.objects.exclude(name='Default Category')
+    categories_list = [{'name': 'همه'}]+list(categories.values('name'))
+    return JsonResponse(categories_list, safe=False)
+
+
+@login_required
+def proceed_to_checkout(request):
+    user = request.user
+    try:
+        order = Order.objects.get(user=user, type='cart')
+    except Order.DoesNotExist:
+        return redirect('cart')
+    
+    total_price = 0
+    product_details = []
+    
+    for order_product in OrderProduct.objects.filter(order=order):
+        product = order_product.product
+        total_price += product.price * order_product.quantity
+        print(product.price, type(product.price))
+        product_details.append({
+            'name': product.name,
+            'quantity': order_product.quantity,
+            'price': float(product.price),
+        })
+
+    delivery_type = request.POST.get('delivery_type', 'in_person')
+    
+    PurchaseRecord.objects.create(
+        user=user,
+        products=json.dumps(product_details),
+        total_price=total_price,
+    )
+    
+    order.type = 'completed'
+    order.delivery_type = delivery_type
+    order.save()
+    return redirect('purchase_history')
+
