@@ -1,0 +1,65 @@
+{% extends "shop/base.html" %} {% block content %}
+<h1 style="text-align: right;">نمودار فروش</h1>
+
+<div style="text-align: right;">
+    <label for="interval">انتخاب بازه زمانی: </label>
+    <select id="interval" name="interval" onchange="updateChartInterval()">
+        {% if interval == 'daily' %}
+        <option value="daily" selected>روزانه</option>
+        <option value="weekly">هفتگی</option>
+        <option value="monthly">ماهانه</option>
+        {% elif interval == 'weekly' %}
+        <option value="daily">روزانه</option>
+        <option value="weekly" selected>هفتگی</option>
+        <option value="monthly">ماهانه</option>
+        {% elif interval == 'monthly' %}
+        <option value="daily">روزانه</option>
+        <option value="weekly">هفتگی</option>
+        <option value="monthly" selected>ماهانه</option>
+        {% endif %}
+    </select>
+</div>
+
+<canvas id="salesChart" width="800" height="400"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let str = '{{ sales_data|escapejs }}'.replace('<QuerySet ', '').replace('>', '');
+    let searchValue = '\'';
+    let newStr = str;
+
+    while (newStr.indexOf(searchValue) !== -1) {
+        newStr = newStr.replace('\'', "\"");
+    }
+    const salesData = JSON.parse(newStr);
+    const labels = salesData.map(data => data.product__name);
+    const quantities = salesData.map(data => data.total_quantity);
+
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    const salesChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'مجموع فروش',
+                data: quantities,
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    function updateChartInterval() {
+        const interval = document.getElementById('interval').value;
+        window.location.href = '{% url "sales_chart" %}?interval=' + interval;
+    }
+</script>
+{% endblock %}

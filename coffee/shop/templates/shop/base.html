@@ -32,15 +32,21 @@
                     <a class="nav-link" href="{% url 'purchase_history' %}"><i class="fas fa-history"></i> تاریخچه خرید</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'cart' %}"><i class="fas fa-shopping-cart"></i> سبد خرید</a> {% if user.is_authenticated %} {% if user.is_staff %} {% endif %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> خروج</a>
-                    </li>
-                    {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> ورود</a>
-                    </li>
-                    {% endif %}
+                    <a class="nav-link" href="{% url 'cart' %}"><i class="fas fa-shopping-cart"></i> سبد خرید</a>
+                </li>
+                {% if user.is_authenticated %} {% if user.is_staff %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'sales_chart' %}"><i class="fas fa-chart-bar"></i> نمودار فروش</a>
+                </li>
+                {% endif %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> خروج</a>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> ورود</a>
+                </li>
+                {% endif %}
             </ul>
         </div>
     </nav>
