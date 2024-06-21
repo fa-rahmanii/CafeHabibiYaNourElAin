@@ -13,5 +13,5 @@ urlpatterns = [
     path('purchase-history/', views.purchase_history, name='purchase_history'),
     path('get-categories/', views.get_categories, name='get_categories'),
     path('proceed-to-checkout/', views.proceed_to_checkout, name='proceed_to_checkout'),
-
+    path('admin/sales-chart/', views.sales_chart_view, name='sales_chart'),
 ]
