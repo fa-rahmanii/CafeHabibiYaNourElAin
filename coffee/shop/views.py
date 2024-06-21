@@ -2,11 +2,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from .models import Product, Order, OrderProduct, Category, SliderItem, PurchaseRecord
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.handlers.wsgi import WSGIRequest
 from django.db.models import Sum
 from django.contrib import messages
 from django.http import JsonResponse
+from django.core.serializers.json import DjangoJSONEncoder
 import json
 
 
@@ -172,3 +173,23 @@ def proceed_to_checkout(request):
     order.save()
     return redirect('purchase_history')
 
+ 
+@user_passes_test(lambda u: u.is_superuser)
+def sales_chart_view(request):
+    interval = request.GET.get('interval', 'monthly')
+    
+    if interval == 'daily':
+        sales_data = OrderProduct.objects.values('product__name').annotate(total_quantity=Sum('quantity')).order_by('product__name')
+    elif interval == 'weekly':
+        sales_data = OrderProduct.objects.values('product__name').annotate(total_quantity=Sum('quantity')).order_by('product__name')
+    else:
+        sales_data = OrderProduct.objects.values('product__name').annotate(total_quantity=Sum('quantity')).order_by('product__name')
+
+    sales_data_list = list(sales_data)
+    sales_data_json = json.dumps(sales_data_list, cls=DjangoJSONEncoder)
+
+    context = {
+        'sales_data': sales_data_json,
+        'interval': interval,
+    }
+    return render(request, 'admin/sales_chart.html', context)
