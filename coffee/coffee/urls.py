@@ -19,6 +19,10 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+admin.site.site_header  =  "کافی شاپ نورالعین"  
+admin.site.site_title  =  "ادمین"
+admin.site.index_title  =  "کافی شاپ"
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
