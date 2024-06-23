@@ -177,19 +177,21 @@ def proceed_to_checkout(request):
 @user_passes_test(lambda u: u.is_superuser)
 def sales_chart_view(request):
     interval = request.GET.get('interval', 'monthly')
+    selected_product = request.GET.get('product', 'all')
     
-    if interval == 'daily':
-        sales_data = OrderProduct.objects.values('product__name').annotate(total_quantity=Sum('quantity')).order_by('product__name')
-    elif interval == 'weekly':
-        sales_data = OrderProduct.objects.values('product__name').annotate(total_quantity=Sum('quantity')).order_by('product__name')
-    else:
-        sales_data = OrderProduct.objects.values('product__name').annotate(total_quantity=Sum('quantity')).order_by('product__name')
-
+    products = Product.objects.all()
+    sales_data = OrderProduct.objects.values('product__name').annotate(total_quantity=Sum('quantity')).order_by('product__name')
+    
+    if selected_product != 'all':
+        sales_data = sales_data.filter(product_id=selected_product)
+    
     sales_data_list = list(sales_data)
     sales_data_json = json.dumps(sales_data_list, cls=DjangoJSONEncoder)
 
     context = {
         'sales_data': sales_data_json,
         'interval': interval,
+        'products': products,
+        'selected_product': int(selected_product) if selected_product != 'all' else 'all',
     }
-    return render(request, 'admin/sales_chart.html', context)
+    return render(request, 'shop/sales_chart.html', context)
