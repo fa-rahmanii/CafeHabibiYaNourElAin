@@ -3,20 +3,17 @@
 
 <div style="text-align: right;">
     <label for="interval">انتخاب بازه زمانی: </label>
-    <select id="interval" name="interval" onchange="updateChartInterval()">
-        {% if interval == 'daily' %}
-        <option value="daily" selected>روزانه</option>
-        <option value="weekly">هفتگی</option>
-        <option value="monthly">ماهانه</option>
-        {% elif interval == 'weekly' %}
-        <option value="daily">روزانه</option>
-        <option value="weekly" selected>هفتگی</option>
-        <option value="monthly">ماهانه</option>
-        {% elif interval == 'monthly' %}
-        <option value="daily">روزانه</option>
-        <option value="weekly">هفتگی</option>
-        <option value="monthly" selected>ماهانه</option>
-        {% endif %}
+    <select id="interval" name="interval" onchange="updateChart()">
+        <option value="daily" {% if interval == 'daily' %}selected{% endif %}>روزانه</option>
+        <option value="weekly" {% if interval == 'weekly' %}selected{% endif %}>هفتگی</option>
+        <option value="monthly" {% if interval == 'monthly' %}selected{% endif %}>ماهانه</option>
+    </select>
+    <label for="product">انتخاب محصول: </label>
+    <select id="product" name="product" onchange="updateChart()">
+        <option value="all" {% if selected_product == 'all' %}selected{% endif %}>همه</option>
+        {% for product in products %}
+        <option value="{{ product.id }}" {% if selected_product == product.id %}selected{% endif %}>{{ product.name }}</option>
+        {% endfor %}
     </select>
 </div>
 
@@ -24,42 +21,45 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    let str = '{{ sales_data|escapejs }}'.replace('<QuerySet ', '').replace('>', '');
-    let searchValue = '\'';
-    let newStr = str;
+    const rawSalesData = '{{ sales_data|escapejs }}'.replace('<QuerySet ', '').replace('>', '').replace(/'/g, '"');
+    const salesData = JSON.parse(rawSalesData);
 
-    while (newStr.indexOf(searchValue) !== -1) {
-        newStr = newStr.replace('\'', "\"");
-    }
-    const salesData = JSON.parse(newStr);
-    const labels = salesData.map(data => data.product__name);
-    const quantities = salesData.map(data => data.total_quantity);
 
+    let salesChart;
     const ctx = document.getElementById('salesChart').getContext('2d');
-    const salesChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'مجموع فروش',
-                data: quantities,
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
+
+    function renderChart(data) {
+        if (salesChart) {
+            salesChart.destroy();
+        }
+        salesChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.map(d => d.product__name),
+                datasets: [{
+                    label: 'مجموع فروش',
+                    data: data.map(d => d.total_quantity),
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
                 }
             }
-        }
-    });
-
-    function updateChartInterval() {
-        const interval = document.getElementById('interval').value;
-        window.location.href = '{% url "sales_chart" %}?interval=' + interval;
+        });
     }
+
+    function updateChart() {
+        const interval = document.getElementById('interval').value;
+        const product = document.getElementById('product').value;
+        window.location.href = `{% url 'sales_chart' %}?interval=${interval}&product=${product}`;
+    }
+
+    renderChart(salesData); // Initial chart render
 </script>
 {% endblock %}
